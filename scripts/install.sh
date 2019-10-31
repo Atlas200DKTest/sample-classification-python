@@ -45,7 +45,7 @@ function installPythonPkg()
     echo "ERROR: no pachages to install, exit 1"
     return 1
   fi
-  ssh -t HwHiAiUser@${remote_host} "su - root -c \"apt-get update;apt-get upgrade;apt-get install python-dev;cd /home/HwHiAiUser/HIAI_PROJECTS/pythonPkg;bash install.sh\""
+  ssh -t HwHiAiUser@${remote_host} "su - root -c \"apt-get update;apt-get install python-dev;cd /home/HwHiAiUser/HIAI_PROJECTS/pythonPkg;bash install.sh\""
   return 0
 }
 

@@ -12,58 +12,19 @@ resnet18OmFileName='./models/Resnet18.om'
 srcFileDir = './ImageNetRaw/'
 dstFileDir = './resnet18Result/'
 
-def CreateGraph(model,modelInWidth,modelInHeight,dvppInWidth,dvppInHeight):
-
-	#µ÷ÓÃget_default_graph»ñÈ¡Ä¬ÈÏGraph£¬ÔÙ½øĞĞÁ÷³Ì±àÅÅ
-	myGraph = hiai.hiai._global_default_graph_stack.get_default_graph()
-	if myGraph is None :
-		print 'get defaule graph failed'
-		return None
-	print 'dvppwidth %d, dvppheight %d'%(dvppInWidth,dvppInHeight)
-	# Á÷³Ì±àÅÅ	
-	cropConfig = hiai.CropConfig(0,0,dvppInWidth,dvppInHeight)
-	print 'cropConfig ', cropConfig 
-	resizeConfig = hiai.ResizeConfig(modelInWidth,modelInHeight)
-	print 'resizeConfig ', resizeConfig
-
-	nntensorList=hiai.NNTensorList()
-	print 'nntensorList', nntensorList	
-
-	resultCrop = hiai.crop(nntensorList,cropConfig)
-	print 'resultCrop', resultCrop
-
-	resultResize = hiai.resize(resultCrop, resizeConfig)
-	print 'resultResize', resultResize
-
-	resultInference = hiai.inference(resultResize, model, None)
-	print 'resultInference', resultInference
-
-	if ( hiai.HiaiPythonStatust.HIAI_PYTHON_OK == myGraph.create_graph()):
-		print 'create graph ok !!!!'
-		return myGraph
-	else :
-		print 'create graph failed, please check Davinc log.'
-		return None
 
 def CreateGraphWithoutDVPP(model):
 
-	#µ÷ÓÃget_default_graph»ñÈ¡Ä¬ÈÏGraph£¬ÔÙ½øĞĞÁ÷³Ì±àÅÅ
-	print model
+	#è°ƒç”¨get_default_graphè·å–é»˜è®¤Graphï¼Œå†è¿›è¡Œæµç¨‹ç¼–æ’
 	myGraph = hiai.hiai._global_default_graph_stack.get_default_graph()
-	print myGraph
 	if myGraph is None :
 		print 'get defaule graph failed'
 		return None
 
-
 	nntensorList=hiai.NNTensorList()
-	print nntensorList
 
-	# ²»µ÷ÓÃDVPP Ëõ·ÅÍ¼Æ¬£¬Ê¹ÓÃopencv Ëõ·ÅÍ¼Æ¬
+	# ä¸è°ƒç”¨DVPP ç¼©æ”¾å›¾ç‰‡ï¼Œä½¿ç”¨opencv ç¼©æ”¾å›¾ç‰‡
 	resultInference = hiai.inference(nntensorList, model, None)
-	print nntensorList
-	print hiai.HiaiPythonStatust.HIAI_PYTHON_OK
-	#print myGraph.create_graph()
 
 	if ( hiai.HiaiPythonStatust.HIAI_PYTHON_OK == myGraph.create_graph()):
 		print 'create graph ok !!!!'
@@ -84,9 +45,8 @@ def GraphInference(graphHandle,inputTensorList):
 def Resnet18PostProcess(resultList, srcFilePath, dstFilePath, fileName):
 
 	if resultList is not None :
-		# resultList ÊÇÒ»¸ölist¶ÔÏó¡£Ã¿¸öitem Ò²ÊÇÒ»¸ö array¶ÔÏóµÄlist
+		# resultList æ˜¯ä¸€ä¸ªlistå¯¹è±¡ã€‚æ¯ä¸ªitem ä¹Ÿæ˜¯ä¸€ä¸ª arrayå¯¹è±¡çš„list
 		resultArray = resultList[0]
-
 		batchNum = resultArray.shape[0]
 		confidenceNum = resultArray.shape[3]
 		confidenceList = resultArray[0,0,0,:]
@@ -99,18 +59,10 @@ def Resnet18PostProcess(resultList, srcFilePath, dstFilePath, fileName):
 		firstLabel = imageNetClasses.imageNet_classes[firstClass]
 		print fileName + '    ' + '%.2f%%' % (firstConfidence*100) + '\t' + firstLabel
 
-
 		dstFileName = os.path.join('%s%s' % (dstFilePath, fileName))
 		srcFileName = os.path.join('%s%s' % (srcFilePath, fileName))
 
 		jpegHandler.putText(srcFileName, dstFileName, '%.2f%%' % (firstConfidence*100) + ':' + firstLabel)
-
-		'''
-		# ÁíÒ»ÖÖÌáÈ¡Êä³ö½á¹ûµÄ·½Ê½¡£½«result_list ×ª»»³ÉNNTensorList£¬È»ºóÌáÈ¡³öNNTensor£¬×îºóÍ¨¹ıNNTensorµÄdata_listÌáÈ¡³öÊı¾İ£¬×îÖÕÀàËÆÎªnumpy.array
-		result_nntensor_list=hiai.NNTensorList(resultList)
-		result_nn_tensor = result_nntensor_list[0]
-		res_array = result_nn_tensor.data_list[0]
-		'''
 
 		return None
 	else :
@@ -119,9 +71,7 @@ def Resnet18PostProcess(resultList, srcFilePath, dstFilePath, fileName):
 
 def main():
 	inferenceModel = hiai.AIModelDescription('restnet18',resnet18OmFileName)
-	print resnet18OmFileName
-	print inferenceModel
-	# we will resize the jpeg to 256*224 to meet resnet18 requirement vis opencv,
+	# we will resize the jpeg to 256*224 to meet resnet18 requirement via opencv,
 	# so DVPP resizing is not needed  	
 	myGraph = CreateGraphWithoutDVPP(inferenceModel)
 	if myGraph is None :
@@ -131,21 +81,7 @@ def main():
 	# in this sample demo, the resnet18 model requires 256*224 images
 	dvppInWidth = 256
 	dvppInHeight = 224
-	
-	'''
-	# in this sample demo, the resnet18 model requires 256*224 images
-	modelInWidth=256	
-	modelInHeight=224
 
-	dvppInWidth = 400
-	dvppInHeight = 300
-
-	# the input image should be 512*448 , DVPP will resize it to 256*224 to meet the resnet18 requirement.
-	myGraph = CreateGraph(inferenceModel, modelInWidth, modelInHeight, dvppInWidth, dvppInHeight)
-	if myGraph is None :
-		print "CreateGraph failed"
-		return None
-	'''
 	start = time.time()
 
 	pathDir =  os.listdir(srcFileDir)
