@@ -8,7 +8,7 @@ import os
 import numpy as np
 import time
 
-resnet18OmFileName='./models/Resnet18.om'
+resnet18OmFileName='./models/resnet18.om'
 srcFileDir = './ImageNetRaw/'
 dstFileDir = './resnet18Result/'
 
@@ -83,6 +83,7 @@ def main():
 	dvppInHeight = 224
 
 	start = time.time()
+	jpegHandler.mkdirown(dstFileDir)
 
 	pathDir =  os.listdir(srcFileDir)
 	for allDir in pathDir :
