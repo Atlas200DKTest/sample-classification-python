@@ -2,6 +2,18 @@
 
 python_hiai_path=/usr/local/python-hiai
 
+
+subdir_create() {
+    path=$1
+    if [ ! -d $path ];then
+        mkdir -p $path
+    fi
+
+    chmod 750 $path
+    chown $username:$usergroup $path >> /dev/null 2>&1
+    return 0
+}
+
 install_python_egg(){
     targetdir=$1
 
