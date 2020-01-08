@@ -193,7 +193,7 @@
 
     执行结果保存在当前目录下的resent18Result目录下，可以用以下命令拷贝到Ubuntu服务器中查看推理结果图片。
 
-    **scp -r ./resent18Result **_username@host\_ip:\~_
+    **scp -r ./resent18Result _username@host\_ip:\~_**
 
     -   username：Mindstudio的安装用户，如mindstudio。
     -   host\_ip：Ubuntu服务器中设置的虚拟网卡静态IP，可以在Ubuntu服务器中通过ifconfig查看，如[图 host\_ip查看](#fig16957172011614)所示。
