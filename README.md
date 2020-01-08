@@ -59,7 +59,7 @@
 
     3.  单击OK开始转换模型。
 
-        模型转换成功后，后缀为.om的离线模型存放地址为**\$HOME/tools/che/model-zoo/my-model/xxx**。
+        模型转换成功后，后缀为.om的离线模型存放地址为$HOME/tools/che/model-zoo/my-model/xxx。
 
     4.  将转换好的模型文件（.om文件）上传到[步骤1](#li953280133816)中源码所在路径下的“sample-classification-python/classificationapp/models”目录下。
 
