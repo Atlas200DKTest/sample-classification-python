@@ -81,7 +81,7 @@
     1.  开发板通过网线与可以上网的网口相连。
     2.  在Mind Studio所在Ubuntu服务器中，以HwHiAiUser用户SSH登录到Host侧。
 
-        **ssh HwHiAiUser@****192.168.1.2**
+        **ssh HwHiAiUser@192.168.1.2**
 
         切换到root用户，开发板中root用户默认密码为**Mind@123**。
 
