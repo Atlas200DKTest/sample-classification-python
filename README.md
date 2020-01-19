@@ -19,11 +19,11 @@
 
 1.  <a name="li953280133816"></a>获取源码包。
 
-    将[https://gitee.com/Atlas200DK/sample-classification-python](https://gitee.com/Atlas200DK/sample-classification-python)仓中的代码以Mind Studio安装用户下载至Mind Studio所在Ubuntu服务器的任意目录，例如代码存放路径为：/home/ascend/sample-classfiyResnet18-python。
+    将[https://gitee.com/Atlas200DK/sample-classification-python](https://gitee.com/Atlas200DK/sample-classification-python)仓中的代码以Mind Studio安装用户下载至Mind Studio所在Ubuntu服务器的任意目录，例如代码存放路径为：$HOME/sample-classfiyResnet18-python。
 
 2.  获取此应用中所需要的网络模型。
 
-    参考[表 分类网络应用\(python\)使用模型](#table1119094515272)获取此应用中所用到的原始网络模型及其对应的权重文件，并将其存放到Mind Studio所在Ubuntu服务器的任意目录，例如$HOME/ascend/models/classification-python。
+    参考[表 分类网络应用\(python\)使用模型](#table1119094515272)获取此应用中所用到的原始网络模型及其对应的权重文件，并将其存放到Mind Studio所在Ubuntu服务器的任意目录，例如：$HOME/ascend/models/classification-python。
 
     **表 1**  分类网络应用\(python\)使用模型
 
@@ -68,7 +68,7 @@
 
 1.  应用代码拷贝到开发板。
 
-    以Mind Studio安装用户进入分类网络应用\(python\)代码所在根目录，如/home/ascend/sample-classfiyResnet18-python，执行以下命令将应用代码拷贝到开发板。
+    以Mind Studio安装用户进入分类网络应用\(python\)代码所在根目录，如：$HOME/sample-classfiyResnet18-python，执行以下命令将应用代码拷贝到开发板。
 
     **scp -r ../sample-classfiyResnet18-python/ HwHiAiUser@192.168.1.2:/home/HwHiAiUser/HIAI\_PROJECTS**
 
