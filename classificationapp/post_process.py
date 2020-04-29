@@ -1,10 +1,26 @@
 import numpy as np
 import copy
-#from atlasutil.presenteragent.presenter_types import *
+from atlasutil.presenteragent.presenter_types import *
 import cv2 as cv
 
-'''
-def SSDPostProcess(inference_result, image_resolution, confidence_threshold):
+
+def SSDPostProcess(inference_result, image_resolution, confidence_threshold, labels = []):
+    '''
+    processes SSD detection result, returns detection result
+
+    Args:
+        resultList: list, detection result
+        image_resolution: integer, the quantity of categories with top confidece level user wants to obtain
+        confidence_threshold: numpy array, the corresponding index of top n confidence
+        labels: list of all categories that can be detected
+    
+    Returns:
+        detection_result_list: list of ObjectDetectionResult
+        detection_item.lt: left top coordinate with element x and y
+        detection_item.rb: right below coordinate with element x and y
+        detection_item.attr: label
+        detection_item.confidence: confidence
+    '''
     result = inference_result[0]
     shape = result.shape
     detection_result_list = []
@@ -15,55 +31,16 @@ def SSDPostProcess(inference_result, image_resolution, confidence_threshold):
         detection_item = ObjectDetectionResult()
         detection_item.attr = int(item[1])
         detection_item.confidence = item[2]
-        detection_item.lt.x = int(item[3] * image_resolution[0])
-        detection_item.lt.y = int(item[4] * image_resolution[1])
-        detection_item.rb.x = int(item[5] * image_resolution[0])
-        detection_item.rb.y = int(item[6] * image_resolution[1])
-        detection_item.result_text = str(detection_item.attr) + " " + str(detection_item.confidence*100) + "%"
+        detection_item.lt.x = int(max(min(item[3], 1), 0) * image_resolution[1])
+        detection_item.lt.y = int(max(min(item[4], 1), 0) * image_resolution[0])
+        detection_item.rb.x = int(max(min(item[5], 1), 0) * image_resolution[1])
+        detection_item.rb.y = int(max(min(item[6], 1), 0) * image_resolution[0])
+        if labels == []:
+            detection_item.result_text = str(detection_item.attr) + " " + str(round(detection_item.confidence*100,2)) + "%"
+        else:
+            detection_item.result_text = str(labels[detection_item.attr]) + " " + str(round(detection_item.confidence*100,2)) + "%"
         detection_result_list.append(detection_item)
-
     return detection_result_list 
-'''
-
-def SSDPostProcess(resultList, resolution, confidence_threshold):
-    '''
-    ssd postprocess, output the box cooridinates with required confidence
-    the output of ssd model is [image_id, label, confidence, xmin, ymin, xmax, ymax], with shape [n,1,1,7]
-
-    Args:
-        resultList: the output of inference
-        resolution: the resolution of image, (width, height)
-
-    Returns:
-        bbox: [condidence, lt_x, lt_y, rb_x, rb_y], with shape (n,5)
-    '''
-    result_tensor = resultList[0]
-    bbox = []
-    for arr in result_tensor:
-        if arr[0][0][2] >= confidence_threshold:
-            lt_x = arr[0][0][3] * resolution[0]
-            lt_y = arr[0][0][4] * resolution[1]
-            rb_x = arr[0][0][5] * resolution[0]
-            rb_y = arr[0][0][6] * resolution[1]
-            bbox.append([arr[0][0][2], lt_x, lt_y, rb_x, rb_y])
-    if bbox == []:
-        print("[SSDPostProcess]: no object detected")
-    return bbox
-
-label = ["background", "person",
-        "bicycle", "car", "motorbike", "aeroplane",
-        "bus", "train", "truck", "boat", "traffic light",
-        "fire hydrant", "stop sign", "parking meter", "bench",
-        "bird", "cat", "dog", "horse", "sheep", "cow", "elephant",
-        "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag",
-        "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball",
-        "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-        "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon",
-        "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog",
-        "pizza", "donut", "cake", "chair", "sofa", "potted plant", "bed", "dining table",
-        "toilet", "TV monitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
-        "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
-        "scissors", "teddy bear", "hair drier", "toothbrush"]
 
 anchors_yolo = [[(116,90),(156,198),(373,326)],[(30,61),(62,45),(59,119)],[(10,13),(16,30),(33,23)]]
 
@@ -71,6 +48,7 @@ def sigmoid(x):
     s = 1 / (1 + np.exp(-1*x))
     return s
 
+#获取分数最高的类别,返回分数和索引
 def getMaxClassScore(class_scores):
     class_score = 0
     class_index = 0
@@ -106,7 +84,7 @@ def getBBox(feat, anchors, image_shape, confidence_threshold):
                     box.append([bx,by,bw,bh,b_class_score,b_class_index])
     return box
 
-
+#非极大值抑制阈值筛选得到bbox
 def donms(boxes,nms_threshold):
     b_x = boxes[:, 0]
     b_y = boxes[:, 1]
@@ -115,21 +93,26 @@ def donms(boxes,nms_threshold):
     scores = boxes[:,4]
     areas = (b_w+1)*(b_h+1)
     order = scores.argsort()[::-1]
-    keep = [] 
+    keep = []  # 保留的结果框集合
     while order.size > 0:
         i = order[0]
-        keep.append(i) 
+        keep.append(i)  # 保留该类剩余box中得分最高的一个
+        # 得到相交区域,左上及右下
         xx1 = np.maximum(b_x[i], b_x[order[1:]])
         yy1 = np.maximum(b_y[i], b_y[order[1:]])
         xx2 = np.minimum(b_x[i] + b_w[i], b_x[order[1:]] + b_w[order[1:]])
         yy2 = np.minimum(b_y[i] + b_h[i], b_y[order[1:]] + b_h[order[1:]])
+        #相交面积,不重叠时面积为0
         w = np.maximum(0.0, xx2 - xx1 + 1)
         h = np.maximum(0.0, yy2 - yy1 + 1)
         inter = w * h
+        #相并面积,面积1+面积2-相交面积
         union = areas[i] + areas[order[1:]] - inter
+        # 计算IoU：交 /（面积1+面积2-交）
         IoU = inter / union
+        # 保留IoU小于阈值的box
         inds = np.where(IoU <= nms_threshold)[0]
-        order = order[inds + 1] 
+        order = order[inds + 1]  # 因为IoU数组的长度比order数组少一个,所以这里要将所有下标后移一位
 
     final_boxes = [boxes[i] for i in keep]
     return final_boxes
@@ -143,20 +126,42 @@ def getBoxes(resultList, anchors, img_shape, confidence_threshold, nms_threshold
     Boxes = donms(np.array(boxes),nms_threshold)
     return Boxes
 
-def Yolov3_post_process(resultList, img, confidence_threshold, nms_threshold):
+def Yolov3_post_process(resultList, confidence_threshold, nms_threshold, model_shape, img_shape, labels=[], anchors=anchors_yolo):
     '''
-    processes YOLOv3 inference result, and returns boxes detected
+    processes YOLOv3 inference result, and returns detection result
 
     Args:
-        resultList: a list, inference result
-        img: numpy array, image data
+        resultList: list of inference result
         confidence_threshold: float number, confidence threshold
         nms_threshold: float number, NMS threshold
+        model_shape: shape of model input
+        img_shape: shape of original image
+        labels: labels of model detection
+        anchors: anchors of yolov3 model
+
+    Returns:
+        detection_result_list: list of ObjectDetectionResult
+        detection_item.lt: left top coordinate with element x and y
+        detection_item.rb: right below coordinate with element x and y
+        detection_item.attr: label
+        detection_item.confidence: confidence
     '''
-    resultArray = resultList[0]
-    img_shape = img.shape
-    boxes = getBoxes(resultArray, anchors_yolo, img_shape, confidence_threshold, nms_threshold)
-    return boxes
+    boxes = getBoxes(resultList, anchors, model_shape, confidence_threshold, nms_threshold)
+    detection_result_list = []
+    for box in boxes:
+        detection_item = ObjectDetectionResult()
+        if labels != []:
+            detection_item.attr = labels[int(box[5])]
+        else:
+            detection_item.attr = ""
+        detection_item.confidence = round(box[4],4)
+        detection_item.lt.x = int((box[0]-box[2]/2)*img_shape[1])
+        detection_item.lt.y = int((box[1]-box[3]/2)*img_shape[0])
+        detection_item.rb.x = int((box[0]+box[2]/2)*img_shape[1])
+        detection_item.rb.y = int((box[1]+box[3]/2)*img_shape[0])
+        detection_item.result_text = str(detection_item.attr) + " " + str(detection_item.confidence*100) + "%"
+        detection_result_list.append(detection_item)
+    return detection_result_list
 
 def GenerateTopNClassifyResult(resultList, n):
     '''
