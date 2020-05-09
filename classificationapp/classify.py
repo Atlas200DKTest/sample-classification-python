@@ -9,7 +9,7 @@ import graph
 import post_process
 import cv2 as cv
 
-cur_path = os.path.dirname(__file__)
+cur_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(cur_path)
 resnet18OmFileName='./models/resnet18.om'
 srcFileDir = './ImageNetRaw/'

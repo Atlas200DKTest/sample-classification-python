@@ -1,6 +1,8 @@
+#coding=utf-8
+
 import numpy as np
 import copy
-from atlasutil.presenteragent.presenter_types import *
+# from atlasutil.presenteragent.presenter_types import *
 import cv2 as cv
 
 
